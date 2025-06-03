@@ -1,0 +1,70 @@
+# Warning: You should not install multiple instances of cert-manager on a single cluster.
+# This will lead to undefined behavior and you may be banned from providers such as Let's Encrypt.
+
+# Chart home
+# https://artifacthub.io/packages/helm/cert-manager/cert-manager
+
+global:
+  leaderElection:
+    namespace: {{ .Release.Namespace }}
+
+installCRDs: true
+
+prometheus:
+  servicemonitor:
+    enabled: {{ .Values | get "certManager.enableServiceMonitor" true }}
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+
+{{- if .Values | get "certManager.nodeSelector" nil }}
+nodeSelector:
+{{- toYaml .Values.certManager.nodeSelector | nindent 2 }}
+{{- end }}
+
+{{- if .Values | get "certManager.tolerations" nil }}
+tolerations:
+{{- toYaml .Values.certManager.tolerations | nindent 2 }}
+{{- end }}
+
+
+{{- if .Values | get "certManager.startupapicheck" nil }}
+startupapicheck:
+{{- toYaml .Values.certManager.startupapicheck | nindent 2 }}
+{{- end }}
+
+## `webhook` deployment configuration
+webhook:
+  {{- if .Values | get "certManager.nodeSelector" nil }}
+  nodeSelector:
+  {{- toYaml .Values.certManager.nodeSelector | nindent 4 }}
+  {{- end }}
+
+  {{- if .Values | get "certManager.tolerations" nil }}
+  tolerations:
+  {{- toYaml .Values.certManager.tolerations | nindent 4 }}
+  {{- end }}
+
+  resources:
+    limits:
+      cpu: 20m
+      memory: 64Mi
+
+## `cainjector` deployment configuration
+cainjector:
+  {{- if .Values | get "certManager.nodeSelector" nil }}
+  nodeSelector:
+  {{- toYaml .Values.certManager.nodeSelector | nindent 4 }}
+  {{- end }}
+
+  {{- if .Values | get "certManager.tolerations" nil }}
+  tolerations:
+  {{- toYaml .Values.certManager.tolerations | nindent 4 }}
+  {{- end }}
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 512Mi

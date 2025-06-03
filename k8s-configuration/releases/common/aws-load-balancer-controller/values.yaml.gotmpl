@@ -1,0 +1,52 @@
+---
+clusterName: {{ .Values.clusterName }}
+
+resources:
+  requests:
+    memory: {{ .Values | get "albIngressController.resources.requests.memory" "200Mi" }}
+    cpu: {{ .Values | get "albIngressController.resources.requests.cpu" "100m" }}
+  limits:
+    memory: {{ .Values | get "albIngressController.resources.limits.memory" "200Mi" }}
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: {{ .Values.albIngressController.iamRole }}
+
+enableCertManager: {{ .Values | get "albIngressController.enableCertManager" false }}
+
+replicaCount: {{ .Values | get "albIngressController.replicaCount" 3 }}
+
+affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - aws-load-balancer-controller
+          topologyKey: topology.kubernetes.io/zone
+
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - aws-load-balancer-controller
+        topologyKey: kubernetes.io/hostname
+        
+{{- if .Values | get "albIngressController.nodeSelector"  nil }}
+nodeSelector:
+{{- toYaml .Values.albIngressController.nodeSelector | nindent 2 }}
+{{- end }}
+
+{{- if .Values | get "albIngressController.tolerations"  nil }}
+tolerations:
+{{- toYaml .Values.albIngressController.tolerations | nindent 2 }}
+{{- end }}
+
+pdb:
+  create: true

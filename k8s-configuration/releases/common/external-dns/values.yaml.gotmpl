@@ -1,0 +1,39 @@
+---
+aws:
+  region: {{ .Values.awsRegion }}
+  batchChangeSize: {{ .Values.externalDns.batchChangeSize }}
+resources:
+  limits:
+    memory: {{ .Environment.Values | get "externalDns.resources.limits.memory" "100Mi" }}
+  requests:
+    memory: {{ .Environment.Values | get "externalDns.resources.requests.memory" "70Mi" }}
+    cpu: {{ .Environment.Values | get "externalDns.resources.requests.cpu" "10m" }}
+
+txtOwnerId: "{{ .Values.clusterName }}"
+
+## Modify how DNS records are synchronized between sources and providers (options: sync, upsert-only )
+policy: {{ .Values.externalDns.policy }}
+
+logLevel: info
+
+publishInternalServices: {{ .Environment.Values | get "externalDns.publishInternalServices" "false" }}
+
+zoneIdFilters:
+{{range .Values.externalDns.zoneIdFilters}}
+  - {{.}}
+{{end}}
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: {{ .Values.externalDns.iamRole | quote }}
+
+{{- if .Values | get "externalDns.nodeSelector"  nil }}
+nodeSelector:
+{{- toYaml .Values.externalDns.nodeSelector | nindent 2 }}
+{{- end }}
+
+{{- if .Values | get "externalDns.tolerations"  nil }}
+tolerations:
+{{- toYaml .Values.externalDns.tolerations | nindent 2 }}
+{{- end }}

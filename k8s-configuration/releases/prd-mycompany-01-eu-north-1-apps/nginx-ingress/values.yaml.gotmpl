@@ -1,0 +1,100 @@
+fullnameOverride: nginx-ingress
+
+controller:
+  admissionWebhooks:
+    enabled: {{ .Environment.Values.nginxIngress | get "admissionWebhook.enabled" true}}
+    {{- if hasKey .Environment.Values.nginxIngress "admissionWebHookTimeoutSeconds" }}
+    timeoutSeconds: {{ .Environment.Values.nginxIngress |get "admissionWebHookTimeoutSeconds" }}
+    {{- end }}
+  config:
+    use-proxy-protocol: 'true'
+    use-forwarded-headers: 'true'
+    proxy-real-ip-cidr: 0.0.0.0/0
+    client-header-buffer-size: '10k'
+    large-client-header-buffers: '8 16k'
+    hsts: 'true'
+    ssl-redirect: 'false'
+    http-snippet: |
+      map true $pass_access_scheme {
+        default "https";
+      }
+        map true $pass_port {
+        default 443;
+      }
+      server {
+        listen 8080 proxy_protocol;
+        return 308 https://$host$request_uri;
+      }
+  stats:
+    enabled: true
+    omitClusterIP: true
+  metrics:
+    enabled: false
+    omitClusterIP: true
+    serviceMonitor:
+      enabled: true
+  image:
+    repository: k8s.gcr.io/ingress-nginx/controller
+    tag: v0.35.0
+  replicaCount: {{ .Environment.Values | getOrNil "nginxIngress.replicaCount" | default 2 }}
+  minAvailable: {{ .Environment.Values | getOrNil "nginxIngress.minAvailable" | default 1 }}
+  ingressClass: {{ .Environment.Values | getOrNil "nginxIngress.ingressClass" | default "nginx" }}
+  autoscaling:
+    enabled: true
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 75
+    minReplicas: 2
+    maxReplicas: 15
+  publishService:
+    enabled: true
+  service:
+    omitClusterIP: true
+    targetPorts:
+      http: 8080
+      https: http
+    loadBalancerSourceRanges:
+    {{- if or (contains "production" .Environment.Name) (contains "prd" .Environment.Name) }}
+    - 0.0.0.0/0
+    {{- else }}
+    {{- range $name, $list := .Environment.Values.olx_allowlist_ips -}}
+    {{- range $ip := $list }}
+    - {{ $ip }}
+    {{- end -}}
+    {{- end -}}
+    {{- end }}
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+      service.beta.kubernetes.io/aws-load-balancer-ssl-ports: https
+      service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+      service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ .Environment.Values.nginxIngress.sslCertArn }}
+      service.beta.kubernetes.io/aws-load-balancer-access-log-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name: "{{ .Environment.Values.nginxIngress.accessLogBucketName }}"
+      service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "{{ .Environment.Values.nginxIngress.additionalResourceTags }}"
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+      service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: '10'
+      {{- if .Environment.Values.nginxIngress.loadbalancer_security_groups }}
+      service.beta.kubernetes.io/aws-load-balancer-security-groups: "{{- join "," .Environment.Values.nginxIngress.loadbalancer_security_groups }}"
+      {{- end }}
+      {{- if hasKey .Environment.Values.nginxIngress "external_dns_hostname" }}
+      external-dns.alpha.kubernetes.io/hostname: "{{ .Environment.Values.nginxIngress.external_dns_hostname }}"
+      {{- end }}
+      service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+  podAnnotations:
+    prometheus.io/port: "10254"
+    prometheus.io/scrape: "true"
+  resources:
+  {{- if .Environment.Values.nginxIngress.resources }}
+  {{- toYaml .Environment.Values.nginxIngress.resources | nindent 6 }}
+  {{- else }}
+    requests:
+      cpu: 100m
+      memory: "256Mi"
+    limits:
+      cpu: 100m
+      memory: "256Mi"
+  {{- end }}
+defaultBackend:
+  enabled: true
+  service:
+    omitClusterIP: true

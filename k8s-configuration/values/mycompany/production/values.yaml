@@ -1,0 +1,3 @@
+# common values for production
+environment: production
+awsAccountId: 111729354111

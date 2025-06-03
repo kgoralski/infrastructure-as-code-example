@@ -1,0 +1,24 @@
+golang-app:
+  name: "golang-app"
+  mutable: false
+  scan_on_push: true
+  policy_template: "ecr_policy_default"
+  expiration_days: 90
+golang-app-chart:
+  name: "golang-app-chart"
+  mutable: false
+  scan_on_push: true
+  policy_template: "ecr_policy_default"
+  expiration_days: 90
+php-app:
+  name: "php-app"
+  mutable: false
+  scan_on_push: true
+  policy_template: "ecr_policy_default"
+  expiration_days: 90
+php-app-chart:
+  name: "php-app-chart"
+  mutable: false
+  scan_on_push: true
+  policy_template: "ecr_policy_default"
+  expiration_days: 90

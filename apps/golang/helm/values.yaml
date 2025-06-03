@@ -1,0 +1,5 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: 111729354111.dkr.ecr.eu-north-1.amazonaws.com/golang-app
+  tag: "latest"
+

@@ -1,0 +1,37 @@
+---
+autoDiscovery:
+  clusterName: {{ .Values.clusterName }}
+
+awsRegion: {{ .Values.awsRegion }}
+cloudProvider: aws
+
+fullnameOverride: cluster-autoscaler
+
+resources:
+  requests:
+    cpu: {{ .Values | get "clusterAutoscaler.resources.requests.cpu" "50m" }}
+    memory: {{ .Values | get "clusterAutoscaler.resources.requests.memory" "300Mi" }}
+  limits:
+    {{- if .Values | get "clusterAutoscaler.resources.limits.cpu" "" }}
+    cpu: {{ .Values.clusterAutoscaler.resources.limits.cpu }}
+    {{- end }}
+    memory: {{ .Values | get "clusterAutoscaler.resources.limits.memory" "650Mi" }}
+
+serviceMonitor:
+  enabled: false
+  # needs to stay in sync with the one configured within prometheus(-operator)
+  interval: 30s
+  namespace: false
+extraArgs:
+  stderrthreshold: info
+  skip-nodes-with-system-pods: false
+  scale-down-unneeded-time: 10m0s
+  expander: least-waste
+  balance-similar-node-groups: true
+  leader-elect: false
+
+rbac:
+  create: true
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: {{ .Values.clusterAutoscaler.iamRole |quote }}

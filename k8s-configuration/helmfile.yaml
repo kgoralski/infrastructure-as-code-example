@@ -1,0 +1,110 @@
+---
+repositories:
+  - name: ecr
+    url: 111729354111.dkr.ecr.eu-north-1.amazonaws.com
+    oci: true
+    username: 'AWS'
+
+  - name: stable
+    url: https://charts.helm.sh/stable
+  - name: incubator
+    url: https://charts.helm.sh/incubator
+
+  - name: autoscaler
+    url: https://kubernetes.github.io/autoscaler
+
+  - name: eks
+    url: https://aws.github.io/eks-charts
+
+  - name: albCrds
+    url: https://mthoretton.github.io/aws-load-balancer-controller-crds/
+
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+  - name: metricsServer
+    url: https://kubernetes-sigs.github.io/metrics-server
+
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+
+environments:
+  prd-mycompany-01-eu-north-1-apps:
+    values:
+      - values/mycompany/production/values.yaml
+      - values/mycompany/production/eu-north-1/01/values.yaml
+#    secrets:
+#      - values/mycompany/production/eu-north-1/01/secrets.yaml
+    missingFileHandler: Error
+
+#default values to set for args along with dedicated keys that can be set by contributers, cli args take precedence over these
+helmDefaults:
+  verify: false
+  wait: true
+  timeout: 2400
+  historyMax: 5 # keep release metadata small
+  atomic: false  # restores previous state in case of failed release
+  cleanupOnFail: true # cleans up any new resources created during a failed release
+  createNamespace: false # do not allow helmfile to create namespaces.  namespaces should be explicitly managed with terraform
+
+releases:
+- name: cluster-autoscaler
+  namespace: kube-system
+  chart: {{ .Values | get "eksVersion.clusterAutoscaler.chart" "autoscaler/cluster-autoscaler" }}
+  version: {{ .Values | get "eksVersion.clusterAutoscaler.chartVersion" "9.34.0" }}
+  values:
+    - releases/prd-mycompany-01-eu-north-1-apps/{{`{{ .Release.Name }}`}}/values.yaml.gotmpl
+
+- name: metrics-server
+  namespace: kube-system
+  chart: metricsServer/metrics-server
+  version: 3.9.0
+  values:
+    - releases/common/{{`{{ .Release.Name }}`}}/values.yaml.gotmpl
+
+- name: aws-load-balancer-controller-crds
+  namespace: kube-system
+  version: 1.3.3
+  chart: albCrds/aws-load-balancer-controller-crds
+
+## warning:  some changes may recreate load-balancer!!
+- name: aws-load-balancer-controller
+  namespace: kube-system
+  version: 1.7.0
+  chart: eks/aws-load-balancer-controller
+  needs:
+    - aws-load-balancer-controller-crds
+  values:
+    - releases/common/{{`{{ .Release.Name }}`}}/values.yaml.gotmpl
+
+#- name: cert-manager
+#  namespace: infra-shared
+#  version: 1.0.2
+#  chart: jetstack/cert-manager
+#  values:
+#    - releases/common/{{`{{ .Release.Name }}`}}/values.yaml.gotmpl
+
+#- name: nginx-ingress
+#  namespace: infra-ingress
+#  version: {{ .Values | get "nginxIngress.chartVersion" "3.35.0" }}
+#  chart: ingress-nginx/ingress-nginx
+#  values:
+#    - releases/prd-mycompany-01-eu-north-1-apps/{{`{{ .Release.Name }}`}}/values.yaml.gotmpl
+
+#- name: argo-rollouts
+#  namespace: argo
+#  chart: argo/argo-rollouts
+#  version: 2.9.1
+
+- name: golang
+  namespace: sample-apps
+  chart: ecr/golang-app-chart
+  version: 0.1.0
+
+- name: php
+  namespace: sample-apps
+  chart: ecr/php-app-chart
+  version: 0.1.0

@@ -1,0 +1,109 @@
+clusterName: prd-mycompany-01-eu-north-1-apps
+awsRegion: eu-north-1
+
+awsCoreDNS:
+  replicaCount: 3
+
+clusterAutoscaler:
+  iamRole: "arn:aws:iam::111729354111:role/mycompany-01-eu-north-1-cluster-autoscaler"
+
+
+#  minReplicas: 2
+#  maxReplicas: 11
+#  domainName: prd.01.eu-west-1.css.olx.org # tooling services external facing
+#  sslCertArn: 'arn:aws:acm:eu-west-1:152488068192:certificate/b733b3c4-6c8d-4353-8319-2ee23053d35b'
+#  accessLogBucketName: eu-css-01-production-eu-west-1-ingress-logs
+#  additionalResourceTags: "Name=nginx-ingress-css,Environment=production"
+#  resources:
+#    requests:
+#      cpu: 100m
+#      memory: "256Mi"
+#    limits:
+#      cpu: 250m
+#      memory: "1Gi"
+#  public:
+#    minReplicas: 2
+#    maxReplicas: 11
+#    ingressClass: "nginx-public"
+#    nameOverride: "nginx-ingress-public"
+#    domainName: css.olx.io # client facing external facing
+#    sslCertArn: 'arn:aws:acm:eu-west-1:152488068192:certificate/402aa1f9-3267-42ec-827f-2e0a82d52ece'
+#    accessLogBucketName: eu-css-01-production-eu-west-1-ingress-logs
+#    additionalResourceTags: "Name=nginx-ingress-css-public,Environment=production"
+#    resources:
+#      requests:
+#        cpu: 200m
+#        memory: "256Mi"
+#      limits:
+#        cpu: 400m
+#        memory: "512Mi"
+#  private:
+#    minReplicas: 2
+#    maxReplicas: 25
+#    ingressClass: "nginx-private"
+#    nameOverride: "nginx-ingress-private"
+#    domainName: css.olx.io # internal cluster split-horizon
+#    sslCertArn: 'arn:aws:acm:eu-west-1:152488068192:certificate/402aa1f9-3267-42ec-827f-2e0a82d52ece'
+#    internalNetwork: true
+#    accessLogEnabled: false
+#    accessLogBucketName: eu-css-01-production-eu-west-1-ingress-logs
+#    additionalResourceTags: "Name=nginx-ingress-css-private,Environment=production"
+#    resources:
+#      requests:
+#        cpu: 200m
+#        memory: "256Mi"
+#      limits:
+#        cpu: 400m
+#        memory: "512Mi"
+
+albIngressController:
+  minAvailable: 2
+  replicaCount: 2
+  iamRole: 'arn:aws:iam::111729354111:role/mycompany-01-eu-north-1-EKSLBControllerRole'
+
+#externalDns:
+#  policy: upsert-only
+#  iamRole: 'arn:aws:iam::152488068192:role/eu-css-01-production-external-dns-eu-west-1'
+#  batchChangeSize: 100
+#  zoneIdFilters:
+#  - Z0479741Z8ZA7M45B46Q  # public, prd.01.eu-west-1.css.olx.org.
+#  resources:
+#    memory: "100Mi"
+#    cpu: 50m
+#    limits:
+#      memory: "200Mi"
+#      cpu: 50m
+#
+#  public:
+#    # this must be left to `sync` for staging. it is required for PWA staging, which recreates ingress endpoints
+#    nameOverride: "external-dns-public"
+#    policy: upsert-only
+#    iamRole: 'arn:aws:iam::152488068192:role/eu-css-01-production-external-dns-eu-west-1'
+#    batchChangeSize: 100
+#    zoneIdFilters:
+#    - Z01685071TFF70WQCIR3H  # public, prd.01.eu-west-1.css.olx.org.
+#    resources:
+#      memory: "100Mi"
+#      cpu: 50m
+#      limits:
+#        memory: "200Mi"
+#        cpu: 50m
+#
+#  ## Reduce scope of DNS record updates?
+#  private:
+#    # this must be left to `sync` for staging. it is required for PWA staging, which recreates ingress endpoints
+#    nameOverride: "external-dns-private"
+#    policy: upsert-only
+#    iamRole: 'arn:aws:iam::152488068192:role/eu-css-01-production-external-dns-eu-west-1'
+#    batchChangeSize: 100
+#    zoneIdFilters:
+#    - Z0679879JCUQ73ZJOBNP  # public, prd.01.eu-west-1.css.olx.org.
+#    resources:
+#      memory: "100Mi"
+#      cpu: 50m
+#      limits:
+#        memory: "200Mi"
+#        cpu: 50m
+
+
+
