@@ -6,7 +6,7 @@ Originally done as an interview task. It can be outdated.
 * Terraform & Terragrunt (to control environments) - `infrastructure` directory
 * Helm, Helmfile, Docker - `k8s-configuration` directory - Helmfile was used only for simplification, I would use GitOps tool like ArgoCD/FluxCD instead
 * AWS: IAM, VPC, EKS, RDS Aurora (+RDS IAM), Security Groups, ECR (for Docker Images and Helm Charts), IRSA, ASGs, EIPs
-* Kubernetes: CoreDNS, AWS VPC-CNI, kube-proxy, ALB, cluster-autoscaler, metrics-server, HPA for apps, ServiceAccounts, IRSA, auth-aws configmap
+* Kubernetes: CoreDNS, AWS VPC-CNI, kube-proxy, ALB, cluster-autoscaler, metrics-server, HPA for apps, ServiceAccounts, IRSA, auth-aws configmap (now it could be access_entries instead)
 * Applications are packed inside `apps` directory
 
 ### Tools that could improve this stack
